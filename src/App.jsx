@@ -3,6 +3,7 @@ import { Plus, BookOpen, Sparkles } from 'lucide-react';
 import RecipeList from './components/RecipeList';
 import RecipeForm from './components/RecipeForm';
 import RecipePicker from './components/RecipePicker';
+import { loadAllRecipes, saveRecipe as saveRecipeToStoragr, deleteRecipe as deleteRecipeFromStorage } from './utils/storage';
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -18,32 +19,19 @@ const App = () => {
   }, []);
 
   const loadRecipes = async () => {
-    try {
-      const result = await window.storage.list('recipe');
-      if (result?.keys) {
-        const loadedRecipes = await Promise.all(
-          result.keys.map(async (key) => {
-            const data = await window.storage.get(key);
-            return data ? JSON.parse(data.value) : null;
-          })
-        );
-        setRecipes(loadedRecipes.filter(Boolean));
-      } 
-    } catch (error) {
-      console.log('No recipes found yet');
-    }
+    const recipes = await loadAllRecipes();
+    setRecipes(recipes);
   };
 
   const saveRecipe = async (recipe) => {
-    const recipeWithId = recipe.id ? recipe : { ...recipe, id: Date.now().toString() };
-    await window.storage.set(`recipe:${recipeWithId.id}`, JSON.stringify(recipeWithId));
+    await saveRecipeToStoragr(recipe);
     await loadRecipes();
     setEditingRecipe(null);
     setView('list');
   };
 
   const deleteRecipe = async (id) => {
-    await window.storage.delete(`recipe:${id}`);
+    await deleteRecipeFromStorage(id);
     await loadRecipes();
   };
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Check, Users } from 'lucide-react';
+import { scaleIngredient } from '../utils/portionCalculator';
 
 const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
     
@@ -21,44 +22,6 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
     const [isViewing, setIsViewing] = useState(!!recipe?.id);
 
     const moods = ['Comfort Food', 'Light & Fresh', 'Quick & Easy', 'Special Occasion', 'Hearty', 'Healthy'];
-
-    const scaleIngredient = (ingredient, originalServings, newServings) => {
-        const ratio = newServings / originalServings;
-        //Match numbers (including fractions and decimals)
-        const numberPattern = /(\d+\.?\d*|\d*\.?\d+\/\d+)/g;
-        return ingredient.replace(numberPattern, (match) => {
-            let num;
-            //Handle fractions
-            if (match.includes('/')) {
-                const [numerator, denominator] = match.split('/').map(Number);
-                num = numerator / denominator;
-            } else {
-                num = parseFloat(match);
-            }
-            const scaled = num * ratio;
-            //Format the result nicely
-            if (scaled % 1 === 0) {
-                return scaled.toString();
-            }
-            else if (scaled < 1) {
-                //Covert to fraction for small amounts
-                const fractions = {
-                    0.125: '1/8',
-                    0.25: '1/4',
-                    0.333: '1/3',
-                    0.5: '1/2',
-                    0.667: '2/3',
-                    0.75: '3/4'
-                };
-                for (const [decimal, fraction] of Object.entries(fractions)) {
-                    if (Math.abs(scaled - parseFloat(decimal)) < 0.01) {
-                        return fraction;
-                    }
-                }
-            }
-            return scaled.toFixed(2).replace(/\.?0+$/, '');
-        });
-    };
 
     //Get ingredients scaled to current serving size
     const getScaledIngredients = () => {
