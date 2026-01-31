@@ -10,7 +10,7 @@ export const scaleIngredient = (ingredient, originalServings, newServings) => {
     const ratio = newServings / originalServings;
 
     //Match numbers (including fractions and decimals)
-    const numberPattern = /(\d+\.?\d*|\d*\.?\d+\/\d+)/g; // dive deeper into this type of expressions
+    const numberPattern = /(\d+\/\d+|\d+\.?\d*)(?![°%\d])/g; // dive deeper into this type of expressions
 
     return ingredient.replace(numberPattern, (match) => {
         let num;

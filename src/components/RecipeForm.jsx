@@ -187,6 +187,9 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
             {/* Ingredients */}
             <div>
                 <label className="block text-amber-900 font-medium mb-2">Ingredients</label>
+                <p className='text-sm text-amber-600 italic mb-2'>
+                    💡 Tip: Start with the amount for accurate portion scaling (e.g., "200g flour")
+                </p>
 
                 {isViewing ? (
                     <div className="space-y-2">
@@ -206,7 +209,7 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
                                     value={ing}
                                     onChange={(e) => updateIngredient(index, e.target.value)}
                                     className="flex-1 px-4 py-2 border-2 border-amber-200 rounded-lg focus:border-amber-500 focus:outline-none"
-                                    placeholder="e.g., 200g flour"
+                                    placeholder="e.g., 200g flour, 1/2 tsp salt"
                                     required
                                     />
                                 {formData.ingredients.length > 1 && (
