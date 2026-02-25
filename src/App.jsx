@@ -19,20 +19,35 @@ const App = () => {
   }, []);
 
   const loadRecipes = async () => {
-    const recipes = await loadAllRecipes();
-    setRecipes(recipes);
+    try {
+      const recipes = await loadAllRecipes();
+      setRecipes(recipes);
+    } catch (error) {
+      console.error('Failed to load recipes:', error);
+      alert('Failed to load recipes. Please refresh the page.');
+    }
   };
 
   const saveRecipe = async (recipe) => {
-    await saveRecipeToStoragr(recipe);
-    await loadRecipes();
-    setEditingRecipe(null);
-    setView('list');
+    try {
+      await saveRecipeToStorage(recipe);
+      await loadRecipes();
+      setEditingRecipe(null);
+      setView('list');
+    } catch (error) {
+      console.error('Failed to save recipe:', error);
+      alert('Failed to save recipe. Please try again.');
+    }
   };
 
   const deleteRecipe = async (id) => {
-    await deleteRecipeFromStorage(id);
-    await loadRecipes();
+    try {
+      await deleteRecipeFromStorage(id);
+      await loadRecipes();
+    } catch (error) {
+      console.error('Failed to delete recipe:', error);
+      alert('Failed to delete recipe. Please try again.')
+    }
   };
 
   const shareRecipe = (recipe) => {
