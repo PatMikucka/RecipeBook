@@ -38,6 +38,7 @@ const RecipeCard = ({ recipe, onView, onShare }) => {
                         <button
                             onClick={() => onShare(recipe)}
                             className='px-4 py-2 bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition'
+                            aria-label='Share recipe'
                             >
                                 <Share2 className='w-5 h-5' />
                         </button>
