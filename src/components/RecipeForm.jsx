@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Check, Users } from 'lucide-react';
+import { scaleIngredient } from '../utils/portionCalculator';
 
 const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
     
@@ -22,44 +23,6 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
 
     const moods = ['Comfort Food', 'Light & Fresh', 'Quick & Easy', 'Special Occasion', 'Hearty', 'Healthy'];
 
-    const scaleIngredient = (ingredient, originalServings, newServings) => {
-        const ratio = newServings / originalServings;
-        //Match numbers (including fractions and decimals)
-        const numberPattern = /(\d+\.?\d*|\d*\.?\d+\/\d+)/g;
-        return ingredient.replace(numberPattern, (match) => {
-            let num;
-            //Handle fractions
-            if (match.includes('/')) {
-                const [numerator, denominator] = match.split('/').map(Number);
-                num = numerator / denominator;
-            } else {
-                num = parseFloat(match);
-            }
-            const scaled = num * ratio;
-            //Format the result nicely
-            if (scaled % 1 === 0) {
-                return scaled.toString();
-            }
-            else if (scaled < 1) {
-                //Covert to fraction for small amounts
-                const fractions = {
-                    0.125: '1/8',
-                    0.25: '1/4',
-                    0.333: '1/3',
-                    0.5: '1/2',
-                    0.667: '2/3',
-                    0.75: '3/4'
-                };
-                for (const [decimal, fraction] of Object.entries(fractions)) {
-                    if (Math.abs(scaled - parseFloat(decimal)) < 0.01) {
-                        return fraction;
-                    }
-                }
-            }
-            return scaled.toFixed(2).replace(/\.?0+$/, '');
-        });
-    };
-
     //Get ingredients scaled to current serving size
     const getScaledIngredients = () => {
         if (!isViewing || viewServings === formData.servings) {
@@ -70,7 +33,7 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
         );
     };
 
-    //Functions to manage ingredient list
+    //Functions to manage ingredient list 
     const updateIngredient = (index, value) => {
         const newIngredients = [...formData.ingredients];
         newIngredients[index] = value;
@@ -224,6 +187,9 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
             {/* Ingredients */}
             <div>
                 <label className="block text-amber-900 font-medium mb-2">Ingredients</label>
+                <p className='text-sm text-amber-600 italic mb-2'>
+                    💡 Tip: Start with the amount for accurate portion scaling (e.g., "200g flour")
+                </p>
 
                 {isViewing ? (
                     <div className="space-y-2">
@@ -243,7 +209,7 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
                                     value={ing}
                                     onChange={(e) => updateIngredient(index, e.target.value)}
                                     className="flex-1 px-4 py-2 border-2 border-amber-200 rounded-lg focus:border-amber-500 focus:outline-none"
-                                    placeholder="e.g., 200g flour"
+                                    placeholder="e.g., 200g flour, 1/2 tsp salt"
                                     required
                                     />
                                 {formData.ingredients.length > 1 && (

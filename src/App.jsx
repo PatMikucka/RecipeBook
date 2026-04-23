@@ -3,6 +3,7 @@ import { Plus, BookOpen, Sparkles } from 'lucide-react';
 import RecipeList from './components/RecipeList';
 import RecipeForm from './components/RecipeForm';
 import RecipePicker from './components/RecipePicker';
+import { loadAllRecipes, saveRecipe as saveRecipeToStoragr, deleteRecipe as deleteRecipeFromStorage } from './utils/storage';
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -19,32 +20,34 @@ const App = () => {
 
   const loadRecipes = async () => {
     try {
-      const result = await window.storage.list('recipe');
-      if (result?.keys) {
-        const loadedRecipes = await Promise.all(
-          result.keys.map(async (key) => {
-            const data = await window.storage.get(key);
-            return data ? JSON.parse(data.value) : null;
-          })
-        );
-        setRecipes(loadedRecipes.filter(Boolean));
-      } 
+      const recipes = await loadAllRecipes();
+      setRecipes(recipes);
     } catch (error) {
-      console.log('No recipes found yet');
+      console.error('Failed to load recipes:', error);
+      alert('Failed to load recipes. Please refresh the page.');
     }
   };
 
   const saveRecipe = async (recipe) => {
-    const recipeWithId = recipe.id ? recipe : { ...recipe, id: Date.now().toString() };
-    await window.storage.set(`recipe:${recipeWithId.id}`, JSON.stringify(recipeWithId));
-    await loadRecipes();
-    setEditingRecipe(null);
-    setView('list');
+    try {
+      await saveRecipeToStorage(recipe);
+      await loadRecipes();
+      setEditingRecipe(null);
+      setView('list');
+    } catch (error) {
+      console.error('Failed to save recipe:', error);
+      alert('Failed to save recipe. Please try again.');
+    }
   };
 
   const deleteRecipe = async (id) => {
-    await window.storage.delete(`recipe:${id}`);
-    await loadRecipes();
+    try {
+      await deleteRecipeFromStorage(id);
+      await loadRecipes();
+    } catch (error) {
+      console.error('Failed to delete recipe:', error);
+      alert('Failed to delete recipe. Please try again.')
+    }
   };
 
   const shareRecipe = (recipe) => {
