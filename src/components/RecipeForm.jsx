@@ -33,7 +33,7 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
         );
     };
 
-    //Functions to manage ingredient list
+    //Functions to manage ingredient list 
     const updateIngredient = (index, value) => {
         const newIngredients = [...formData.ingredients];
         newIngredients[index] = value;
