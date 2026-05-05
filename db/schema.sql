@@ -2,6 +2,8 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
+    verified BOOLEAN DEFAULT false,
+    verify_token TEXT,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

@@ -1,42 +1,36 @@
+import { request } from './api.js';
+
 export const loadAllRecipes = async () => {
     try {
-        const result = await window.storage.list('recipe:');
-        if (result?.keys) {
-            const recipes = await Promise.all(
-                result.keys.map(async (key) => {
-                    const data = await window.storage.get(key);
-                    return data ? JSON.parse(data.value) : null;
-                })
-            );
-            return recipes.filter(Boolean);
-        }
-        return [];
-    }   catch (error) {
-        console.log('Error loading recipes:', error);
+        const recipes = await request('/recipes');
+        return recipes;
+    } catch (error) {
+        console.error('Error loading recipes:', error);
         return [];
     }
 };
 
-
 export const saveRecipe = async (recipe) => {
-    //Generate ID if creating new recipe
     try {
         if (!recipe || typeof recipe !== 'object' || Array.isArray(recipe)) {
-            throw new Error('Invalid recipe: must be an object');
+            throw new Error('Invalid recipe: must be am object.');
         }
 
-        const recipeWithId = recipe.id
-            ? recipe
-            : { ...recipe, id: Date.now().toString() };
-
-        await window.storage.set(
-            `recipe:${recipeWithId.id}`,
-            JSON.stringify(recipeWithId)
-        );
-
-        return recipeWithId;
+        if (recipe.id) {
+            const updated = await request(`/recipes/${recipe.id}`, {
+                method: 'PUT',
+                body: JSON.stringify(recipe)
+            });
+            return updated;
+        } else {
+            const created = await request('/recipes', {
+                method: 'POST',
+                body: JSON.stringify(recipe)
+            });
+            return created;
+        }
     } catch (error) {
-        console.error('Faild to save recipe:', error);
+        console.error('Failed to save recipe:', error);
         throw error;
     }
 };
@@ -47,7 +41,9 @@ export const deleteRecipe = async (id) => {
             throw new Error('Invalid recipe ID: must be a non-empty string');
         }
 
-        await window.storage.delete(`recipe:${id}`);
+        await request(`/recipes/${id}`, {
+            method: 'DELETE'
+        });
     } catch (error) {
         console.error('Error deleting recipe:', error);
         throw error;
@@ -60,11 +56,10 @@ export const getRecipe = async (id) => {
     }
 
     try {
-        const data = await window.storage.get(`recipe:${id}`);
-        return data ? JSON.parse(data.value) : null;
+        const recipe = await request(`/recipes/${id}`);
+        return recipe;
     } catch (error) {
-        console.log('Error getting recipe:', error);
+        console.error('Error getting recipe:', error);
         return null;
     }
 };
-
