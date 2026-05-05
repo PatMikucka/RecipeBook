@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, BookOpen, Sparkles } from 'lucide-react';
+import AuthForm from './components/AuthForm';
 import RecipeList from './components/RecipeList';
 import RecipeForm from './components/RecipeForm';
 import RecipePicker from './components/RecipePicker';
-import { loadAllRecipes, saveRecipe as saveRecipeToStoragr, deleteRecipe as deleteRecipeFromStorage } from './utils/storage';
+import { loadAllRecipes, saveRecipe as saveRecipeToStorage, deleteRecipe as deleteRecipeFromStorage } from './utils/storage';
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -14,9 +15,26 @@ const App = () => {
     missingIngredients: [],
     mood: ''
   });
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   useEffect(() => {
-    loadRecipes();
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+      loadRecipes();
+    }
+
+    setAuthLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadRecipes();
+    }
+  }, [user]);
 
   const loadRecipes = async () => {
     try {
@@ -26,6 +44,19 @@ const App = () => {
       console.error('Failed to load recipes:', error);
       alert('Failed to load recipes. Please refresh the page.');
     }
+  };
+
+  const handleLogin = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    loadRecipes();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setRecipes([]);
   };
 
   const saveRecipe = async (recipe) => {
@@ -81,6 +112,18 @@ const App = () => {
     return filtered[Math.floor(Math.random() * filtered.length)];
   };
 
+  if (authLoading) {
+    return (
+      <div className='min-h-screen bg-amber-50 flex items-center justify-center'>
+        <BookOpen className='w-12 h-12 text-amber-700 animate-pulse' />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthForm onLogin={handleLogin} />;
+  }
+
   return (
     <div className='min-h-screen bg-amber-50 p-4'>
       <div className='max-w-6xl mx-auto'>
@@ -91,7 +134,14 @@ const App = () => {
             <h1 className='text-5xl font-serif text-amber-900'>My Recipe Book</h1>
           </div>
           <p className='text-amber-700 italic'>A collection of treasured recipes</p>
+          <p className='text-amber-600 text-sm mt-1'>Signed in as {user?.email}</p>
+          <button
+            onClick={handleLogout}
+            className='mt-3 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition text-sm'>
+              Sign Out
+            </button>
         </div>
+
         {/* Navigation Buttons */}
         <div className='flex gap-3 mb-6 flex-wrap justify-center'>
           <button
