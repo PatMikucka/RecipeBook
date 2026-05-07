@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@theme {
+    --color-parchment: #f5efe6;
+    --color-card: #faf5f0;
+    --color-blush: #f0ddd8;
+    --color-rose: #c47a84;
+    --color-rose-deep: #9e5a64;
+    --color-burgundy: #7a4a52;
+    --color-fig: #3d1a40;
+}
