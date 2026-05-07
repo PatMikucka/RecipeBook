@@ -4,6 +4,7 @@ import AuthForm from './components/AuthForm';
 import RecipeList from './components/RecipeList';
 import RecipeForm from './components/RecipeForm';
 import RecipePicker from './components/RecipePicker';
+import VerifyEmail from './components/VerifyEmail';
 import { loadAllRecipes, saveRecipe as saveRecipeToStorage, deleteRecipe as deleteRecipeFromStorage } from './utils/storage';
 
 const App = () => {
@@ -119,6 +120,10 @@ const App = () => {
     }
     return filtered[Math.floor(Math.random() * filtered.length)];
   };
+
+  if (window.location.pathname === '/verify') {
+    return <VerifyEmail onContinue={() => window.location.href = '/'} />;
+  }
 
   if (authLoading) {
     return (

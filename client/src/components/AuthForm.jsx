@@ -8,6 +8,7 @@ const AuthForm = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [registered, setRegistered] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -20,14 +21,32 @@ const AuthForm = ({ onLogin }) => {
                 body: JSON.stringify({ email, password })
             });
 
-            localStorage.setItem('token', data.token);
-            onLogin(data.user);
+            if (!isLogin) {
+                setRegistered(true);
+            } else {
+                localStorage.setItem('token', data.token);
+                onLogin(data.user);
+            }
         } catch (err) {
             setError(err.message);
         } finally {
             setLoading(false);
         }
     };
+
+if (registered) {
+    return (
+        <div className='min-h-screen bg-parchment flex items-center justify-center p-4'>
+            <div className='bg-card rounded-lg shadow-xl border-2 border-blush p-8 w-full max-w-md text-center'>
+                <BookOpen className='w-12 h-12 text-rose mx-auto mb-4' />
+                <h2 className='text-2xl font-serif text-burgundy mb-3'>Check your email!</h2>
+                <p className='text-rose mb-2'>We've sent a verification link to:</p>
+                <p className='text-burgundy font-medium mb-6'>{email}</p>
+                <p className='text-sm text-rose'>Click the link in the email to activate your account. Once verified, come back here to log in.</p>
+            </div>
+        </div>
+    );
+}
 
     return (
         <div className='min-h-screen bg-parchment flex items-center justify-center p-4'>
