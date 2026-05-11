@@ -6,6 +6,7 @@ import RecipeForm from './components/RecipeForm';
 import RecipePicker from './components/RecipePicker';
 import VerifyEmail from './components/VerifyEmail';
 import { loadAllRecipes, saveRecipe as saveRecipeToStorage, deleteRecipe as deleteRecipeFromStorage } from './utils/storage';
+import ResetPassword from './components/ResetPassword';
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -123,6 +124,10 @@ const App = () => {
 
   if (window.location.pathname === '/verify') {
     return <VerifyEmail onContinue={() => window.location.href = '/'} />;
+  }
+
+  if (window.location.pathname === '/reset-password') {
+    return <ResetPassword onComplete={() => window.location.href = '/'} />
   }
 
   if (authLoading) {

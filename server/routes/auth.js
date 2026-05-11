@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
 
         const emailResponse = await resend.emails.send({
             from: 'My Recipe Book <onboarding@resend.dev>',
-            to: 'hey@patmikucka.com',
+            to: email,
             subject: 'Please verify your email',
             html: `
                 <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
@@ -140,6 +140,95 @@ router.get('/verify/:token', async (req, res) => {
 
     } catch (error) {
         console.error('Verification error:', error);
+        res.status(500).json({ error: 'Server error. Please try again.' });
+    }
+});
+
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required.' });
+        }
+
+        const result = await pool.query(
+            'SELECT id, email FROM users WHERE email = $1 AND verified = true',
+            [email]
+        );
+
+        if (result.rows.length === 0) {
+            return res.json({ message: 'You will receive a reset link soon.' });         
+        }
+
+        const user = result.rows[0];
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+        await pool.query(
+            'UPDATE users SET reset_token = $1, reset_token_expiry = $2 WHERE id = $3',
+            [resetToken, resetExpiry, user.id]
+        );
+
+        await resend.emails.send({
+            from: 'My Recipe Book <onboarding@resend.dev>',
+            to: email,
+            subject: 'Reset your password.',
+            html: `
+                <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+                    <h2 style="color: #7a4a52;">Reset your password</h2>
+                    <p style="color: #3d1a40;">We received a request to reset your password. Click the button below to choose a new one.</p>
+                    <a href="http://localhost:5173/reset-password?token=${resetToken}"
+                       style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: #9e5a64; color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
+                        Reset Password
+                    </a>
+                    <p style="color: #c47a84; font-size: 13px;">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
+                </div>
+            `
+        });
+
+        res.json({ message: 'You will receive a reset link soon.' });
+
+    } catch (error) {
+        console.error('forgot password error:', error);
+        res.status(500).json({ error: 'Server error. Please try again.' });
+    }
+});
+
+router.post('/reset-password/:token', async (req, res) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    try {
+        if (!token || !password) {
+            return res.status(400).json({ error: 'Token and password are required.' });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+        }
+
+        const result = await pool.query(
+            'SELECT id FROM users WHERE reset_token = $1 AND reset_token_expiry > NOW()',
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: 'Invalid or expired reset link' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        await pool.query(
+            'UPDATE users SET password = $1, reset_token = NULL, reset_token_expiry = NULL WHERE id = $2',
+            [hashedPassword, result.rows[0].id]
+        );
+
+        res.json({ message: 'Password reset successfully. You can now log in.' });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
         res.status(500).json({ error: 'Server error. Please try again.' });
     }
 });

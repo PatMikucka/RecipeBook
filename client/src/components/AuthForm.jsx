@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Eye, EyeOff } from "lucide-react";
 import { request } from '../utils/api.js';
+import ForgotPassword from "./ForgotPassword.jsx";
 
 const AuthForm = ({ onLogin }) => {
     const [isLogin, setIsLogin] = useState(true);
@@ -9,6 +10,8 @@ const AuthForm = ({ onLogin }) => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [registered, setRegistered] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [forgotPassword, setForgotPassword] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -34,19 +37,24 @@ const AuthForm = ({ onLogin }) => {
         }
     };
 
-if (registered) {
-    return (
-        <div className='min-h-screen bg-parchment flex items-center justify-center p-4'>
-            <div className='bg-card rounded-lg shadow-xl border-2 border-blush p-8 w-full max-w-md text-center'>
-                <BookOpen className='w-12 h-12 text-rose mx-auto mb-4' />
-                <h2 className='text-2xl font-serif text-burgundy mb-3'>Check your email!</h2>
-                <p className='text-rose mb-2'>We've sent a verification link to:</p>
-                <p className='text-burgundy font-medium mb-6'>{email}</p>
-                <p className='text-sm text-rose'>Click the link in the email to activate your account. Once verified, come back here to log in.</p>
+    if (registered) {
+        return (
+            <div className='min-h-screen bg-parchment flex items-center justify-center p-4'>
+                <div className='bg-card rounded-lg shadow-xl border-2 border-blush p-8 w-full max-w-md text-center'>
+                    <BookOpen className='w-12 h-12 text-rose mx-auto mb-4' />
+                    <h2 className='text-2xl font-serif text-burgundy mb-3'>Check your email!</h2>
+                    <p className='text-rose mb-2'>We've sent a verification link to:</p>
+                    <p className='text-burgundy font-medium mb-6'>{email}</p>
+                    <p className='text-sm text-rose'>Click the link in the email to activate your account. Once verified, come back here to log in.</p>
+                </div>
             </div>
-        </div>
-    );
-}
+        );
+    }
+
+
+    if (forgotPassword) {
+        return <ForgotPassword onBack={() => setForgotPassword(false)} />;
+    }
 
     return (
         <div className='min-h-screen bg-parchment flex items-center justify-center p-4'>
@@ -100,15 +108,36 @@ if (registered) {
                         <label className='block text-burgundy font-medium mb-2'>
                             Password
                         </label>
-                        <input
-                            type='password'
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className='w-full px-4 py-3 border-2 border-blush rounded-lg focus:border-rose focus:outline-none bg-card'
-                            placeholder='Minimum 8 characters'
-                            required
-                        />
+                        <div className='relative'>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className='w-full px-4 py-3 border-2 border-blush rounded-lg focus:border-rose focus:outline-none bg-card pr-12'
+                                placeholder='Minimum 8 characters'
+                                required
+                            />
+                            <button
+                                type='button'
+                                onClick={() => setShowPassword(!showPassword)}
+                                className='absolute right-3 top-1/2 -translate-y-1/2 text-rose hover:text-burgundy transition'
+                            >
+                                {showPassword ? <EyeOff className='w-5 h-5' /> : <Eye className='w-5 h-5' />}
+                            </button>
+                        </div>
                     </div>
+
+                    {isLogin && (
+                        <div className='text-right'>
+                            <button
+                                type='button'
+                                onClick={() => setForgotPassword(true)}
+                                className='text-sm text-rose hover:text-burgundy transition'
+                            >
+                                Forgot password?
+                            </button>
+                        </div>
+                    )}
 
                     {error && (
                         <div className='px-4 py-3 bg-red-50 border-2 border-red-200 rounded-lg text-red-700 text-sm'>
