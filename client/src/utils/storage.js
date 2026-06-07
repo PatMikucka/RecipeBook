@@ -13,7 +13,7 @@ export const loadAllRecipes = async () => {
 export const saveRecipe = async (recipe) => {
     try {
         if (!recipe || typeof recipe !== 'object' || Array.isArray(recipe)) {
-            throw new Error('Invalid recipe: must be am object.');
+            throw new Error('Invalid recipe: must be an object.');
         }
 
         if (recipe.id) {

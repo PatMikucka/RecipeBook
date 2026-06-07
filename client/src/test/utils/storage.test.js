@@ -1,66 +1,40 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { loadAllRecipes, saveRecipe, deleteRecipe, getRecipe } from '../../utils/storage';
+import { request } from '../../utils/api';
 
-const mockStorage = {
-    list: vi.fn(),
-    get: vi.fn(),
-    set: vi.fn(),
-    delete: vi.fn(),
-};
+vi.mock('../../utils/api.js', () => ({
+    request: vi.fn()
+}));
 
 beforeEach(() => {
     vi.clearAllMocks();
-    global.window = { storage: mockStorage };
 });
 
 describe('loadAllRecipes', () => {
-    it('should load all recipes from storage', async () => {
+    it('should return the array of recipes from the API', async () => {
         const mockRecipes = [
             { id: '1', title: 'Pasta', time: 30, servings: 4 },
-            { id: '2', title: 'Salad', time: 15, servings: 2 }
+            { id: '2', title: 'Salad', time: 10, servings: 2 }
         ];
-
-        mockStorage.list.mockResolvedValue({
-            keys: ['recipe:1', 'recipe:2']
-        });
-
-        mockStorage.get
-            .mockResolvedValueOnce({ value: JSON.stringify(mockRecipes[0]) })
-            .mockResolvedValueOnce({ value: JSON.stringify(mockRecipes[1]) });
+        request.mockResolvedValue(mockRecipes);
 
         const result = await loadAllRecipes();
 
+        expect(request).toHaveBeenCalledWith('/recipes');
         expect(result).toEqual(mockRecipes);
-        expect(mockStorage.list).toHaveBeenCalledWith('recipe:');
-        expect(mockStorage.get).toHaveBeenCalledTimes(2);
     });
 
-    it('should return empty array when no recibes exist', async () => {
-        mockStorage.list.mockResolvedValue({ keys: null });
+    it('should return an empty array when the API throws', async () => {
+        request.mockRejectedValue(new Error('Network error'));
 
         const result = await loadAllRecipes();
 
         expect(result).toEqual([]);
     });
-
-    it('should filter out null values', async () => {
-        mockStorage.list.mockResolvedValue({
-            keys: ['recipe:1', 'recipe:2']
-        });
-
-        mockStorage.get
-            .mockResolvedValueOnce({ value: JSON.stringify({ id: '1', title: 'Pasta' }) })
-            .mockResolvedValueOnce(null);
-
-        const result = await loadAllRecipes();
-
-        expect(result).toHaveLength(1);
-        expect(result[0].id).toBe('1');
-    });
 });
 
 describe('saveRecipe', () => {
-    it('should save a new recipe and generate an ID', async () => {
+    it('should POST to /recipes foor a new recipe and return the API response', async () => {
         const newRecipe = {
             title: 'Carbonara',
             time: 30,
@@ -69,132 +43,133 @@ describe('saveRecipe', () => {
             instructions: 'Cook pasta...'
         };
 
-        mockStorage.set.mockResolvedValue(null);
+        const serverResponse = { id: 'abc123', ...newRecipe };
+        request.mockResolvedValue(serverResponse);
 
         const result = await saveRecipe(newRecipe);
 
-        expect(result).toHaveProperty('id');
-        expect(result.id).toBeTruthy();
-        expect(typeof result.id).toBe('string');
+        expect(request).toHaveBeenCalledWith('/recipes', {
+            method: 'POST',
+            body: JSON.stringify(newRecipe)
+        });
 
-        expect(result.title).toBe('Carbonara');
-        expect(result.time).toBe(30);
-        expect(result.servings).toBe(4);
-        expect(result.ingredients).toEqual(['pasta', 'eggs']);
-        expect(result.instructions).toBe('Cook pasta...');
-
-        expect(mockStorage.set).toHaveBeenCalledTimes(1);
-
-        expect(mockStorage.set).toHaveBeenCalledWith(
-            `recipe:${result.id}`,
-            JSON.stringify(result)
-        );
+        expect(result).toEqual(serverResponse);
+        expect(result.id).toBe('abc123');
     });
 
-    it('should save an existing recipe and preserve its ID', async () => {
+    it('should PUT to /recipes/:id for an existing recipe and return the API response', async () => {
         const existingRecipe = {
             id: '12345',
-            title: 'Spagetti Bolognese',
+            title: 'Spaghetti Bolognese',
             time: 45,
             servings: 5,
-            ingredients: ['spagetti', 'beef', 'tomatoes'],
+            ingredients: ['pasta', 'beef'],
             instructions: 'Cook the meat...'
         };
 
-        mockStorage.set.mockResolvedValue(null);
+        request.mockResolvedValue(existingRecipe);
 
         const result = await saveRecipe(existingRecipe);
 
-        expect(result.id).toBe('12345');
-        expect(result.title).toBe('Spagetti Bolognese');
-        expect(result.time).toBe(45);
-        expect(result.servings).toBe(5);
-        expect(result.ingredients).toEqual(['spagetti', 'beef', 'tomatoes']);
-        expect(result.instructions).toBe('Cook the meat...')
-
-        expect(mockStorage.set).toHaveBeenCalledTimes(1);
-
-        expect(mockStorage.set).toHaveBeenCalledWith(
-            'recipe:12345',
-            JSON.stringify(existingRecipe)
-        );
-    });
-
-    it('should throw an error when storage.set fails', async () => {
-        const newRecipe = {
-            title: 'Failure',
-            time: 5,
-            servings: 1,
-            ingredients: ['mistake'],
-            instructions: 'Instructions here'
-        };
-
-        const storageError = new Error('Storage quota exceeded');
-        mockStorage.set.mockRejectedValue(storageError);
-
-        await expect(saveRecipe(newRecipe)).rejects.toThrow('Storage quota exceeded');
-
-        expect(mockStorage.set).toHaveBeenCalledTimes(1);
-    });
-
-    describe('Edge Save Cases', () => {
-        it('should throw am error when recipe is null', async () => {
-            await expect(saveRecipe(null)).rejects.toThrow('Invalid recipe: must be an object');
+        expect(request).toHaveBeenCalledWith('/recipes/12345', {
+            method: 'PUT',
+            body: JSON.stringify(existingRecipe)
         });
 
-        it('should throw an error when recipe is undefined', async () => {
-            await expect(saveRecipe(undefined)).rejects.toThrow('Invalid recipe: must be an object');
+        expect(result).toEqual(existingRecipe);
+    });
+
+    it('should re-throw when the API fails', async () => {
+        const recipe = { title: 'fail', time: 5, servings: 1, ingredients: [], instructions: '...' };
+
+        request.mockRejectedValue(new Error('Server error'));
+
+        await expect(saveRecipe(recipe)).rejects.toThrow('Server error');
+
+        expect(request).toHaveBeenCalledTimes(1);
+    });
+
+    describe('input validation', () => {
+        it('should throw without calling the API when recipe is null', async () => {
+            await expect(saveRecipe(null)).rejects.toThrow('Invalid recipe: must be an object.');
+
+            expect(request).not.toHaveBeenCalled();
         });
 
-        it('should throw an error when recipe is not an object', async () => {
-            await expect(saveRecipe('not an object')).rejects.toThrow('Invalid recipe: must be an object');
-            await expect(saveRecipe(123)).rejects.toThrow('Invalid recipe: must be an object');
-            await expect(saveRecipe([])).rejects.toThrow('Invalid recipe: must be an object');
+        it('should throw without calling the API when recipe is undefined', async () => {
+            await expect(saveRecipe(undefined)).rejects.toThrow('Invalid recipe: must be an object.');
+
+            expect(request).not.toHaveBeenCalled();
+        });
+
+        it('should throw without calling the API when recipe is a string', async () => {
+            await expect(saveRecipe('not an object')).rejects.toThrow('Invalid recipe: must be an object.');
+
+            expect(request).not.toHaveBeenCalled();
+        });
+
+        it('should throw without calling the API when recipe is a number', async () => {
+            await expect(saveRecipe(123)).rejects.toThrow('Invalid recipe: must be an object.');
+
+            expect(request).not.toHaveBeenCalled();
+        });
+
+        it('should throw without calling the API when recipe is an array', async () => {
+            await expect(saveRecipe([])).rejects.toThrow('Invalid recipe: must be an object.');
+
+            expect(request).not.toHaveBeenCalled();
         });
     });
 });
 
 describe('deleteRecipe', () => {
-    it('should delete a recipe with the correct key', async () => {
-        const recipeId = '12345';
-        mockStorage.delete.mockResolvedValue(null);
+    it('should call DELETE /recipes/:id with the correct endpoint', async () => {
+        request.mockResolvedValue(undefined);
 
-        await deleteRecipe(recipeId);
+        await deleteRecipe('12345');
 
-        expect(mockStorage.delete).toHaveBeenCalledTimes(1);
-        expect(mockStorage.delete).toHaveBeenCalledWith('recipe:12345');
+        expect(request).toHaveBeenCalledWith('/recipes/12345', { method: 'DELETE'});
+
+        expect(request).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw an error when storage.delete fails', async () => {
-        const recipeId = '12345';
-        const storageError = new Error('Failed to delete from storage');
+    it('should re-throw when the API fails', async () => {
+        request.mockRejectedValue(new Error('Failed to delete from storage'));
 
-        mockStorage.delete.mockRejectedValue(storageError);
+        await expect(deleteRecipe('12345')).rejects.toThrow('Failed to delete from storage');
 
-        await expect(deleteRecipe(recipeId)).rejects.toThrow('Failed to delete from storage');
-
-        expect(mockStorage.delete).toHaveBeenCalledTimes(1);
+        expect(request).toHaveBeenCalledTimes(1);
     });
 
-    describe('Edge Delete Cases', () => {
-        it('should throw an error when id is null', async () => {
+    describe('input validation', () => {
+        it('should throw without calling the API when id is null', async () => {
             await expect(deleteRecipe(null)).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
         });
 
-        it('should throw an error when id is undefined', async () => {
+        it('should throw without calling the API when id is undefined', async () => {
             await expect(deleteRecipe(undefined)).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
         });
 
-        it('should throw an error when id is not a string', async () => {
+        it('should throw without calling the API when id is a number', async () => {
             await expect(deleteRecipe(123)).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
+        });
+
+        it('should throw without calling the API when id is an object', async () => {
             await expect(deleteRecipe({})).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
-            await expect(deleteRecipe([])).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
         });
     });
 });
 
 describe('getRecipe', () => {
-    it('should return a recipe when it exists', async () => {
+    it('should return the recipe from the API when it exists', async () => {
         const mockRecipe = {
             id: '12345',
             title: 'Tiramisu',
@@ -203,51 +178,48 @@ describe('getRecipe', () => {
             ingredients: ['mascarpone', 'coffee', 'ladyfingers'],
             instructions: 'Layer and chill'
         };
-
-        mockStorage.get.mockResolvedValue({
-            value: JSON.stringify(mockRecipe)
-        });
+        request.mockResolvedValue(mockRecipe);
 
         const result = await getRecipe('12345');
 
+        expect(request).toHaveBeenCalledWith('/recipes/12345');
+
         expect(result).toEqual(mockRecipe);
-        expect(mockStorage.get).toHaveBeenCalledTimes(1);
-        expect(mockStorage.get).toHaveBeenCalledWith('recipe:12345');
     });
 
-    it('should return null when recipe does not exist', async () => {
-        mockStorage.get.mockResolvedValue(null);
+    it('should return null when the API throws', async () => {
+        request.mockRejectedValue(new Error('Not found'));
 
         const result = await getRecipe('99999');
 
         expect(result).toBeNull();
-        expect(mockStorage.get).toHaveBeenCalledTimes(1);
-        expect(mockStorage.get).toHaveBeenCalledWith('recipe:99999');
+
+        expect(request).toHaveBeenCalledTimes(1);
     });
 
-    it('should return null when storage.get fails', async () => {
-        const storageError = new Error('Storage access denied');
-        mockStorage.get.mockRejectedValue(storageError);
-
-        const result = await getRecipe('12345');
-
-        expect(result).toBeNull();
-        expect(mockStorage.get).toHaveBeenCalledTimes(1);
-    });
-
-    describe('Edge Cases', () => {
-        it('should throw an errir when id is null', async () => {
+    describe('input validation', () => {
+        it('should throw without calling the API when id is null', async () => {
             await expect(getRecipe(null)).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
         });
 
-        it('should throw an error when id is undefined', async () => {
+        it('should throw without calling the API when id is undefined', async () => {
             await expect(getRecipe(undefined)).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
         });
 
-        it('should throw an error when id is not a string', async () => {
+        it('should throw without calling the API when id is a number', async () => {
             await expect(getRecipe(123)).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
-            await expect(getRecipe({})).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
+        });
+
+        it('should throw without clling the API when id is an object', async () => {
             await expect(getRecipe([])).rejects.toThrow('Invalid recipe ID: must be a non-empty string');
+
+            expect(request).not.toHaveBeenCalled();
         });
     });
 });

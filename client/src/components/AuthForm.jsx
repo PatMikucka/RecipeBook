@@ -150,7 +150,7 @@ const AuthForm = ({ onLogin }) => {
                         disabled={loading}
                         className='w-full px-6 py-3 bg-rose-deep text-card rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed'
                     >
-                        {loading ? 'Please wait...' : isLogin ? 'Login' : 'Create Account'}
+                        {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
                     </button>
                 </form>
             </div>
