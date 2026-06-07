@@ -109,8 +109,9 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
 
                 {/* Recipe Title */}
                 <div>
-                    <label className="block text-burgundy font-medium mb-2">Recipe Title</label>
+                    <label htmlFor="title" className="block text-burgundy font-medium mb-2">Recipe Title</label>
                     <input
+                        id="title"
                         type="text"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -123,8 +124,9 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
                 {/* Time and servings */}
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-burgundy font-medium mb-2">Time (minutes)</label>
+                        <label htmlFor="time" className="block text-burgundy font-medium mb-2">Time (minutes)</label>
                         <input
+                            id="time"
                             type="number"
                             value={formData.time}
                             onChange={(e) => setFormData({ ...formData, time: parseInt(e.target.value) })}
@@ -134,8 +136,9 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-burgundy font-medium mb-2">Servings</label>
+                        <label htmlFor="servings" className="block text-burgundy font-medium mb-2">Servings</label>
                         <input
+                            id="servings"
                             type="number"
                             value={formData.servings}
                             onChange={(e) => setFormData({ ...formData, servings: parseInt(e.target.value) })}
@@ -187,6 +190,7 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
                             {formData.ingredients.map((ing, index) => (
                                 <div key={index} className="flex gap-2 mb-2">
                                     <input
+                                        id={`ingredient-${index}`}
                                         type="text"
                                         value={ing}
                                         onChange={(e) => updateIngredient(index, e.target.value)}
@@ -216,13 +220,14 @@ const RecipeForm = ({ recipe, onSave, onCancel, onDelete }) => {
 
                 {/* Instructions */}
                 <div>
-                    <label className="block text-burgundy font-medium mb-2">Instructions</label>
+                    <label htmlFor="instructions" className="block text-burgundy font-medium mb-2">Instructions</label>
                     {isViewing ? (
                         <div className="px-4 py-3 bg-card border-2 border-blush rounded-lg whitespace-pre-line text-burgundy">
                             {formData.instructions}
                         </div>
                     ) : (
                         <textarea
+                            id="instructions"
                             value={formData.instructions}
                             onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
                             className="w-full px-4 py-3 border-2 border-blush rounded-lg focus:border-rose focus:outline-none bg-card h-40"

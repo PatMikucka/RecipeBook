@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
 
         res.status(201).json(result.rows[0]);
     } catch (error) {
-        console.error('Error saving recippe:', error);
+        console.error('Error saving recipe:', error);
         res.status(500).json({ error: 'Server error. Please try again.' });
     }
 });
@@ -54,7 +54,7 @@ router.put('/:id', async (req, res) => {
         if (existing.rows.length === 0) {
             return res.status(404).json({ error: 'Recipe not found.' });
         }
-        const result = awaitpool.query(
+        const result = await pool.query(
             `UPDATE recipes
             SET title = $1, time = $2, servings = $3, mood = $4,
                 ingredients = $5, instructions = $6
