@@ -7,6 +7,8 @@ import RecipePicker from './components/RecipePicker';
 import VerifyEmail from './components/VerifyEmail';
 import { loadAllRecipes, saveRecipe as saveRecipeToStorage, deleteRecipe as deleteRecipeFromStorage } from './utils/storage';
 import ResetPassword from './components/ResetPassword';
+import FeedbackForm from './components/FeedbackForm';
+
 
 const App = () => {
   const [recipes, setRecipes] = useState([]);
@@ -234,6 +236,9 @@ const App = () => {
             onViewRecipe={(recipe) => { setEditingRecipe(recipe); setView('edit'); }}
           />
         )}
+
+        <FeedbackForm />
+        
       </div>
     </div>
   );
