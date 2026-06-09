@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3001';
+const API_URL = 'https://recipebook-production-fcde.up.railway.app';
 
 const getToken = () => localStorage.getItem('token');
 
