@@ -50,7 +50,7 @@ router.post('/register', async (req, res) => {
                 <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
                     <h2 style="color: #7a4a52;">Welcome to My Recipe Book!</h2>
                     <p style="color: #3d1a40;">Thanks for signing up. Please verify your email address to get started.</p>
-                    <a href="https://recipebook-production-a132.up.railway.app/verify?token=${verifyToken}"
+                    <a href="https://book-of-recipes.com/verify?token=${verifyToken}"
                        style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: #9e5a64; color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
                         Verify Email
                     </a>
@@ -178,7 +178,7 @@ router.post('/forgot-password', async (req, res) => {
                 <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
                     <h2 style="color: #7a4a52;">Reset your password</h2>
                     <p style="color: #3d1a40;">We received a request to reset your password. Click the button below to choose a new one.</p>
-                    <a href="https://recipebook-production-a132.up.railway.app/reset-password?token=${resetToken}"
+                    <a href="https://book-of-recipes.com/reset-password?token=${resetToken}"
                        style="display: inline-block; margin: 24px 0; padding: 12px 24px; background: #9e5a64; color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
                         Reset Password
                     </a>
