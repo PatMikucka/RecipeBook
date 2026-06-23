@@ -22,12 +22,16 @@ router.post('/register', async (req, res) => {
         }
 
         const existingUser = await pool.query(
-            'SELECT id FROM users WHERE email = $1',
+            'SELECT id, verified FROM users WHERE email = $1',
             [email]
-        )
+        );
 
         if (existingUser.rows.length > 0) {
-            return res.status(409).json({ error: 'An account with this email already exists.' });
+            if (existingUser.rows[0].verified) {
+                return res.status(409).json({ error: 'An account with this email already exists.' });
+            }
+
+            await pool.query('DELETE FROM users WHERE id = $1', [existingUser.rows[0].id]);
         }
 
         const salt = await bcrypt.genSalt(10);
