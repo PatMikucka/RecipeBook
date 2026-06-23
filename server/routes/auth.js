@@ -43,7 +43,7 @@ router.post('/register', async (req, res) => {
         const user = result.rows[0];
 
         const emailResponse = await resend.emails.send({
-            from: 'My Recipe Book <onboarding@resend.dev>',
+            from: 'My Recipe Book <noreply@book-of-recipes.com>',
             to: email,
             subject: 'Please verify your email',
             html: `
@@ -171,7 +171,7 @@ router.post('/forgot-password', async (req, res) => {
         );
 
         await resend.emails.send({
-            from: 'My Recipe Book <onboarding@resend.dev>',
+            from: 'My Recipe Book <noreply@book-of-recipes.com>',
             to: email,
             subject: 'Reset your password.',
             html: `
