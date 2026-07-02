@@ -4,8 +4,6 @@ A full-stack recipe management app inspired by generations of women in my family
 
 🔗 **Live Demo:** [book-of-recipes.com](https://book-of-recipes.com)
 
-*Add screenshots here*
-
 ---
 
 ## ✨ Features
@@ -252,12 +250,6 @@ recipe-cookbook/
 - Inspired by generations of women in my family passing down recipes
 - Icons by [Lucide](https://lucide.dev/)
 - Built as part of my web development journey
-
----
-
-## 📸 Screenshots
-
-*Add screenshots of different sections!*
 
 ---
 
