@@ -1,6 +1,8 @@
 # 📖 RecipeBook
 
-A vintage-inspired recipe managment application built with React and Tailwind CSS.
+A full-stack recipe management app inspired by generations of women in my family passing down recipes. Built with React, Node.js, Express, and PostgreSQL.
+
+🔗 **Live Demo:** [book-of-recipes.com](https://book-of-recipes.com)
 
 *Add screenshots here*
 
@@ -8,211 +10,240 @@ A vintage-inspired recipe managment application built with React and Tailwind CS
 
 ## ✨ Features
 
-### 📝 Recipe Managment
-- **Create, Edit, and Delete** recipes with intuitive form interface
-- **Persistent Storage** - All recipes saved locally using browser storage API
-- **Share Recipes** - Share via native share menu (mobile) or clipboard (desktop)
+### 🔐 Authentication
+- **Register & Login** with email and password
+- **Email verification** — new accounts require email confirmation before logging in
+- **Forgot password** flow with tokenised, time-limited reset links
+- **JWT-based sessions** persisted in localStorage
+
+### 📝 Recipe Management
+- **Create, edit, and delete** recipes with an intuitive form interface
+- **Cloud storage** — recipes saved to a PostgreSQL database and synced across devices
+- **Share recipes** — via native share menu (mobile) or clipboard copy (desktop)
 
 ### 🔢 Smart Portion Calculator
 - **Automatic ingredient scaling** based on serving size adjustments
 - Handles **whole numbers**, **decimals**, and **fractions**
-- Intelligently converts decimals to common cooking fractions
+- Intelligently converts decimals to common cooking fractions (e.g. 0.5 → 1/2)
+- Excludes non-quantity numbers like temperatures (°C/°F) and percentages (%)
 - Real-time updates as you adjust servings
-- **Note** Works best wneh ingredients start witg quantities (e.g., "200g flour, 1 cup sugar")
+- **Tip:** Works best when ingredients start with a quantity (e.g. "200g flour", "1/2 cup sugar")
 
 ### 🎲 Recipe Picker ("What's for Dinner?")
 - **Smart filtering** by:
-    - Maximum cooking time
-    - Mood/Category (Comfort Food, Light & Fresh, ect.)
-    - Missing ingredients (exclude recipes you can't make)
+  - Maximum cooking time
+  - Mood/category (Comfort Food, Light & Fresh, Quick & Easy, etc.)
+  - Ingredients you have available
+  - Ingredients you're missing (to exclude recipes you can't make)
 - **Random selection** from filtered results
-- Full recipe details displayed instantly
+- Full recipe preview displayed in a modal
+
+### 💬 Feedback
+- In-app feedback form powered by **Formspree**
 
 ### 🎨 User Experience
-- **Vintage cookbook aesthetic** with warm amber tones
-- **Responsive design** - works beautifully on desktop, tablet, and mobile
-- **Empty states** with helpful prompts for new users
+- **Vintage cookbook aesthetic** with warm rose and parchment tones
+- **Responsive design** — works on desktop, tablet, and mobile
 
 ---
 
-## 🛠️ Technologies Used
+## 🛠️ Tech Stack
 
-- **React** (v19) - UI component with hooks
-- **Tailwind CSS** (v4) - Utility-first CSS framework
-- **Vite** - Fast build tool and dev server
-- **Vitest** - Unit testing framework
-- **Testing Library** - React component testing utilities
-- **Lucide React** - Beautiful icon library
-- **Browser Storage API** - Client-side data persistance
+### Frontend
+- **React** (v19) with hooks
+- **Tailwind CSS** (v4) — utility-first styling
+- **Vite** — build tool and dev server
+- **Lucide React** — icon library
+
+### Backend
+- **Node.js** with **Express** — REST API
+- **PostgreSQL** via **Neon** — serverless database
+- **JWT** — authentication tokens
+- **bcryptjs** — password hashing
+- **Resend** — transactional email (verification + password reset)
+
+### Testing
+- **Vitest** — unit testing framework
+- **React Testing Library** — component testing
+- **@testing-library/user-event** — user interaction simulation
+
+### Deployment
+- **Railway** — full-stack hosting (client + server)
+- **Neon** — serverless PostgreSQL database
+- **Formspree** — feedback form handling
 
 ---
 
-## 🚀 Gettting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js (v18 or higher)
-- npm or yarn
+- npm
+- A PostgreSQL database (e.g. [Neon](https://neon.tech) free tier)
+- A [Resend](https://resend.com) account for sending emails
 
-### Instalation
+### Installation
 
 1. **Clone the repository**
 ```bash
-    git clone
-    cd recipe-cookbook
+git clone https://github.com/PatMikucka/recipe-cookbook.git
+cd recipe-cookbook
 ```
 
-2. **Install dependancies**
+2. **Install client dependencies**
 ```bash
-    npm install
+cd client
+npm install
 ```
 
-3. **Start the development server**
+3. **Install server dependencies**
 ```bash
-    npm run dev
+cd ../server
+npm install
 ```
 
-4. **Open your browser**
+4. **Set up environment variables**
+
+Create a `.env` file in the `server/` directory:
+```env
+DATABASE_URL=your_neon_postgres_connection_string
+JWT_SECRET=your_jwt_secret_key
+RESEND_API_KEY=your_resend_api_key
+PORT=3001
+```
+
+5. **Set up the database**
+
+Run the following SQL to create the required tables:
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  verified BOOLEAN DEFAULT false,
+  verify_token TEXT,
+  reset_token TEXT,
+  reset_token_expiry TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE recipes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  time INTEGER NOT NULL,
+  servings INTEGER NOT NULL,
+  mood TEXT,
+  ingredients TEXT[] NOT NULL,
+  instructions TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+6. **Start the development servers**
+
+In one terminal (server):
 ```bash
-    Navigate to http://localhost:5173
+cd server
+npm run dev
+```
+
+In another terminal (client):
+```bash
+cd client
+npm run dev
+```
+
+7. **Open your browser**
+```
+Navigate to http://localhost:5173
 ```
 
 ---
 
 ## 🧪 Testing
 
-This project includes comprehensive unit tests for utility functions and components.
+Tests live in `client/src/test/` and cover utility functions and UI components.
 
 ### Run Tests
 ```bash
-    npm test
+cd client
+npm test
 ```
 
 ### Run Tests with UI
 ```bash
-    npm run test:ui
+npm run test:ui
 ```
 
 ### Generate Coverage Report
 ```bash
-    npm run test:coverage
+npm run test:coverage
 ```
 
 ### Test Coverage
 
-**Current Coverage: ~ xx%**
+**Utility Functions**
+- `portionCalculator.js` — scaling logic, fraction conversion, edge cases (temperatures, percentages, ranges)
+- `storage.js` — CRUD operations, input validation, error handling
 
-## Utility Functions: 100% coverage
-    - Portion calculator (ingredient scaling logic)
-    - Storage operations (CRUD for recipes)
-
-## Components: xx% coverage
-    - Recipe form validation and submission
-    - Recipe list rendering and interactions
-    - Recipe picker filtering and selection
+**Components**
+- `RecipeCard` — renders recipe info, handles view and share interactions
+- `RecipeList` — renders lists and empty states, passes correct props to cards
 
 ---
 
 ## 📁 Project Structure
-```
 
+```
 recipe-cookbook/
-|-- src/
-|   |--components/      # React components
-|   |   |-- RecipeCard.jsx
-|   |   |-- RecipeForm.jsx
-|   |   |-- RecipeList.jsx
-|   |   |-- RecipePicker.jsx
-|   |-- utils/          # Helper functions
-|   |   |-- portionCalculator.js
-|   |   |-- storage.js
-|   |-- test/           # Test files
-|   |   |-- components/
-|   |   |-- utils/
-|   |   |-- setup.js
-|   |-- App.jsx         # Main app component
-|   |--main.jsx         # App entry point
-|-- public/
-|-- package.json
-|-- README.md
+├── client/
+│   └── src/
+│       ├── components/
+│       │   ├── AuthForm.jsx          # Login & registration
+│       │   ├── ForgotPassword.jsx    # Password reset request
+│       │   ├── ResetPassword.jsx     # Password reset form
+│       │   ├── VerifyEmail.jsx       # Email verification handler
+│       │   ├── RecipeCard.jsx        # Single recipe card
+│       │   ├── RecipeForm.jsx        # Create/edit/view recipe + portion calculator
+│       │   ├── RecipeList.jsx        # Recipe grid
+│       │   ├── RecipePicker.jsx      # "What's for dinner?" feature
+│       │   └── FeedbackForm.jsx      # User feedback (Formspree)
+│       ├── utils/
+│       │   ├── api.js                # Fetch wrapper with auth headers
+│       │   ├── portionCalculator.js  # Ingredient scaling logic
+│       │   └── storage.js            # API calls for recipe CRUD
+│       ├── test/
+│       │   ├── components/
+│       │   ├── utils/
+│       │   └── setup.js
+│       ├── App.jsx                   # Root component & routing logic
+│       └── main.jsx                  # Entry point
+└── server/
+    ├── db/
+    │   └── index.js                  # PostgreSQL pool (Neon)
+    ├── middleware/
+    │   └── auth.js                   # JWT authentication middleware
+    ├── routes/
+    │   ├── auth.js                   # Register, login, verify, reset password
+    │   └── recipes.js                # Recipe CRUD (protected)
+    └── index.js                      # Express app setup
 ```
 
 ---
 
-## 🎯 Key Learning Outcomes
+## 📝 Known Limitations
 
-### React & State Managment
-- Complex state managment with multiple `useState` and `useEffect` hooks
-- Component composition and props drilling
-- Controlled form inputs with validation
-- Conditional rendering patterns
+- **Portion calculator** works best when ingredients follow the format `[amount] [unit] [ingredient]`. Complex or freeform descriptions may not scale as expected.
+- Email delivery depends on Resend and domain configuration — a verified sending domain is required in production.
 
-### Algorithm Design
-- **Portion scaling algorithm** with regex parsing
-- Decimal to fraction conversion for common cooking measurements
-- Random selection with multiple filter criteria
-
-### Testing
-- Unit testing pure functions with Vitest
-- Component testing with React Testing Library
-- Mocking browser APIs for isolated tests
-- Test-driven development practices
-
-### Code organisation
-- Separation of concerns (UI vs logic)
-- Reusable utility functions
-- Professional project structure
-- CClear documentation with JSDoc comments
-
----
-
-## 📝 Known Limitations & Future Enhancements
-
-### Current Limitations
-
-**Portion Calculator:**
-- Works best when ingredients follow standard format: `[amount] [unit] [ingredient]`
-- May scale non-quantity numbers in edge cases (e.g., "85" in "85% chocolate" spelled without symbol)
-- Percentages (%) and temperatures (°) are excluded from scaling
-
-**Data Storage:**
-- Recipes stored locally in browser (not synced across devices)
-- No data backup or export functionality
-
-### Planned Enchantments
-
-- Recipe photo uploads
-- Advanced tagging and categorisation
-- Full-text search functionality
-- Export/inport recipes as JSON or PDF
-- Nutritional information calculator
-- Shopping list generator
-- Cloud sync with user accounts
-- Dark mode support
-
----
-
-## 🤝 Contributing
-
-This is a personal portfolio project showcasing my development skills.
-
-**Feedback welcome!** Found a bug or have suggestions? Open an issue.
-
-**Want to build something similar?** Feel free to fork this repo for learning purposes, but please don't present it as your own work.
-
----
-
-## 📄 License
-
-MIT License - See LICENSE file for details.
-**TL;DR** Free to use for personal/educational purposes with attributions.
 ---
 
 ## 👤 Author
 
 **Patrycja Mikucka**
-
-- GitHub: https://github.com/PatMikucka
-- LinkedIn: https://www.linkedin.com/in/patrycja-mikucka/
+- GitHub: [github.com/PatMikucka](https://github.com/PatMikucka)
+- LinkedIn: [linkedin.com/in/patrycja-mikucka](https://www.linkedin.com/in/patrycja-mikucka/)
 
 ---
 
@@ -230,4 +261,4 @@ MIT License - See LICENSE file for details.
 
 ---
 
-**Build with ❤️ and React**
+*Built with ❤️ and React*
